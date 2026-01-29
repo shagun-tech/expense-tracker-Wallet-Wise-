@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 
 const generateUUID = () => crypto.randomUUID();
-const API_URL = 'http://localhost:3001/expenses';
+const API_URL = 'https://expense-tracker-wallet-wise.onrender.com';
 
 function App() {
   const [expenses, setExpenses] = useState([]);

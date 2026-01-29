@@ -1,7 +1,9 @@
 import { useState, useEffect } from 'react';
 
 const generateUUID = () => crypto.randomUUID();
-const API_URL = 'https://expense-tracker-wallet-wise.onrender.com';
+
+// FIX: Ensure no trailing slash and prioritize environment variable
+const BASE_URL = (import.meta.env.VITE_API_URL || 'https://expense-tracker-wallet-wise.onrender.com').replace(/\/$/, "");
 
 function App() {
   const [expenses, setExpenses] = useState([]);
@@ -17,9 +19,14 @@ function App() {
   const fetchExpenses = async () => {
     setLoading(true);
     try {
-      let url = `${API_URL}?${filterCategory ? `category=${filterCategory}&` : ''}${sortByDate ? 'sort=date_desc' : ''}`;
+      // FIX: Added /api/expenses path and fixed query string construction
+      let url = `${BASE_URL}/api/expenses?${filterCategory ? `category=${filterCategory}&` : ''}${sortByDate ? 'sort=date_desc' : ''}`;
       const res = await fetch(url);
-      setExpenses(await res.json());
+      if (res.ok) {
+        setExpenses(await res.json());
+      }
+    } catch (error) {
+      console.error("Fetch error:", error);
     } finally { setLoading(false); }
   };
 
@@ -28,20 +35,26 @@ function App() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
-    // Money handling: Cents to avoid float errors 
     const amountInCents = Math.round(parseFloat(formData.amount) * 100);
 
     try {
-      const res = await fetch(API_URL, {
+      // FIX: Pointing to the specific POST route /api/expenses
+      const res = await fetch(`${BASE_URL}/api/expenses`, {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json', 'Idempotency-Key': idempotencyKey },
+        headers: { 
+          'Content-Type': 'application/json', 
+          'Idempotency-Key': idempotencyKey 
+        },
         body: JSON.stringify({ ...formData, amount: amountInCents })
       });
+      
       if (res.ok) {
         setFormData({ amount: '', category: 'Food', description: '', date: new Date().toISOString().split('T')[0] });
-        setIdempotencyKey(generateUUID()); // Refresh key after success 
+        setIdempotencyKey(generateUUID()); 
         fetchExpenses();
       }
+    } catch (error) {
+      console.error("Submit error:", error);
     } finally { setLoading(false); }
   };
 
@@ -95,6 +108,7 @@ function App() {
         </div>
 
         <div className="space-y-3">
+          {expenses.length === 0 && !loading && <p className="text-center text-gray-500 py-10">No expenses found.</p>}
           {expenses.map(exp => (
             <div key={exp.id} className="bg-white p-4 rounded-xl shadow-sm border border-gray-100 flex justify-between items-center">
               <div className="flex items-center gap-4">

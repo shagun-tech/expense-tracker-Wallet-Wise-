@@ -1,0 +1,3 @@
+node_modules/
+server/expenses.db
+.DS_Store

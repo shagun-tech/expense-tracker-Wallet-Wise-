@@ -38,7 +38,7 @@ db.serialize(() => {
 // --- API ROUTES ---
 
 // GET /expenses [cite: 26]
-app.get('/expenses', (req, res) => {
+app.get('/api/expenses', (req, res) => {
     const { category, sort } = req.query;
 
     let query = "SELECT * FROM expenses";
@@ -65,7 +65,7 @@ app.get('/expenses', (req, res) => {
 });
 
 // POST /expenses [cite: 19]
-app.post('/expenses', (req, res) => {
+app.post('/api/expenses', (req, res) => {
     const { amount, category, description, date } = req.body;
     const idempotencyKey = req.headers['idempotency-key'];
 
